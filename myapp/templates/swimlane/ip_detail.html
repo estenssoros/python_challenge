@@ -1,0 +1,160 @@
+{% extends 'swimlane/base_site.html' %}
+{%load static%}
+{% load leaflet_tags %}
+{%block head%}
+  {% leaflet_js %}
+  {% leaflet_css %}
+  <style>
+    #map {
+      width: 100%;
+      height: 500px;
+    }
+  </style>
+  <link rel="stylesheet" href="{% static 'swimlane/css/MarkerCluster.css' %}">
+  <link rel="stylesheet" href="{% static 'swimlane/css/MarkerCluster.Default.css' %}">
+{%endblock%}
+{% block content %}
+<div class="row">
+  <div class="page-header">
+    <h1>{{geo.ip}}</h1>
+  </div>
+  <div class="col-md-12">
+    <div class="well">
+      <div id="map">
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row">
+<div class="col-md-6">
+  <div class="panel panel-primary">
+  <div class="panel-heading">Geo Data</div>
+  <table class="table table-bordered">
+    <tr>
+      <th>Item</th>
+      <th>Value</th>
+    </tr>
+    <tr>
+      <td>country code</td>
+      <td>{{geo.country_code}}</td>
+    </tr>
+    <tr>
+      <td>country name</td>
+      <td>{{geo.country_name}}</td>
+    </tr>
+    <tr>
+      <td>region code</td>
+      <td>{{geo.region_code}}</td>
+    </tr>
+    <tr>
+      <td>region name</td>
+      <td>{{geo.region_name}}</td>
+    </tr>
+    <tr>
+      <td>city</td>
+      <td>{{geo.city}}</td>
+    </tr>
+    <tr>
+      <td>zip_code</td>
+      <td>{{geo.zip_code}}</td>
+    </tr>
+    <tr>
+      <td>time zone</td>
+      <td>{{geo.time_zone}}</td>
+    </tr>
+    <tr>
+      <td>latitude</td>
+      <td>{{geo.latitude}}</td>
+    </tr>
+    <tr>
+      <td>longitude</td>
+      <td>{{geo.longitude}}</td>
+    </tr>
+    <tr>
+      <td>metro code</td>
+      <td>{{geo.metro_code}}</td>
+    </tr>
+  </table>
+  </div>
+</div>
+<div class="col-md-6">
+  <div class="panel panel-primary">
+  <div class="panel-heading">RDAP Data</div>
+  <table class="table table-bordered">
+    <tr>
+      <th>Item</th>
+      <th>Value</th>
+    </tr>
+    <tr>
+      <td>name</td>
+      <td>{{rdap.name}}</td>
+    </tr>
+    <tr>
+      <td>country</td>
+      <td>{{rdap.country}}</td>
+    </tr>
+    <tr>
+      <td>start address</td>
+      <td>{{rdap.start_address}}</td>
+    </tr>
+    <tr>
+      <td>end address</td>
+      <td>{{rdap.end_address}}</td>
+    </tr>
+    <tr>
+      <td>entities</td>
+      <td>{{rdap.entities}}</td>
+    </tr>
+    <tr>
+      <td>ip version</td>
+      <td>{{rdap.ip_version}}</td>
+    </tr>
+    <tr>
+      <td>language</td>
+      <td>{{rdap.lang}}</td>
+    </tr>
+    <tr>
+      <td>parent handle</td>
+      <td>{{rdap.parent_handle}}</td>
+    </tr>
+    <tr>
+      <td>status</td>
+      <td>{{rdap.status}}</td>
+    </tr>
+    <tr>
+      <td>type</td>
+      <td>{{rdap.type}}</td>
+    </tr>
+    <tr>
+      <td>last_changed</td>
+      <td>{{rdap.last_changed}}</td>
+    </tr>
+    <tr>
+      <td>registration</td>
+      <td>{{rdap.registration}}</td>
+    </tr>
+  </table>
+</div>
+</div>
+
+</div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript" src="{% static 'swimlane/js/leaflet.markercluster-src.js' %}"></script>
+<script>
+var lat = {{geo.latitude}};
+var lng = {{geo.longitude}};
+var zoom = 9;
+var mymap = L.map('map').setView([lat,lng],zoom);
+L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/{style}/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
+    style: 'streets-v10',
+    accessToken: 'pk.eyJ1Ijoic2ViZXN0ZW5zc29ybyIsImEiOiJjaXpic3JtODgwZ3dsMzJweHkzNzZtMmZ1In0.7iXHSK6NOnMWNl-a2v17HA'
+}).addTo(mymap);
+var markers = L.markerClusterGroup();
+var marker = L.marker([{{geo.latitude}},{{geo.longitude}}]);
+marker.bindPopup("<a href='/swimlane/ip_detail/{{geo.ip}}'>{{geo.ip}}</a>");
+markers.addLayer(marker);
+mymap.addLayer(markers);
+</script>
+{% endblock %}

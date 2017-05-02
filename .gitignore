@@ -1,0 +1,4 @@
+myapp/swimlane/static
+*.pyc
+*.log
+.DS_Store

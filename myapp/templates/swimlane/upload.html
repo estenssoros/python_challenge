@@ -1,0 +1,28 @@
+{% extends 'swimlane/base_site.html' %}
+{% load static %}
+{%block head%}
+<link href="{% static 'swimlane/css/dropzone.css' %}" rel="stylesheet" type="text/css" />
+{%endblock%}
+{% block content %}
+  <h3 class="box-title m-b-0">Upload</h3>
+    <p class="text-muted m-b-30">Do not close or refresh this page <small>see terminal for progress...<small></p>
+    <form action="/swimlane/handle_file_upload/" class="dropzone" id="myAwesomeDropzone">
+      {% csrf_token %}
+      <div class="fallback">
+        <input name="file" type="file" multiple/>
+      </div>
+    </form>
+  {% endblock %}
+{%block scripts%}
+<script src="{% static 'swimlane/js/dropzone.js' %}"></script>
+<script>
+  Dropzone.options.myAwesomeDropzone = {
+    init: function () {
+      this.on("success", function (file) {
+        console.log('adsfasdf');
+        window.location.href = "/swimlane/results";
+      });
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'swimlane/base_site.html' %}
+{% load static %}
+{%block head%}
+
+{%endblock%}
+
+{% block content %}
+<h3 class="box-title m-b-0">Results</h3>
+<table class="table table-bordered">
+  <tr>
+    <th>id</th>
+    <th>date uploaded</th>
+    <th>ip count</th>
+    <th>detail</th>
+  </tr>
+  {%for text_file in text_files %}
+  <tr>
+    <td>{{text_file.id}}</td>
+    <td>{{text_file.date_uploaded}}</td>
+    <td>{{text_file.ip_count}}</td>
+    <td>
+      <a href="/swimlane/text_file_detail/{{text_file.id}}">
+        <button type="button" class="btn btn-primary">
+          <span class="glyphicon glyphicon-equalizer" aria-hidden="true">
+          </span>
+        </button>
+      </a>
+      <a href="#">
+        <button type="button" class="btn btn-danger">
+          <span class="glyphicon glyphicon-trash" aria-hidden="true">
+          </span>
+        </button>
+      </a>
+    </td>
+  </tr>
+  {%endfor%}
+</table>
+{% endblock %}
+
+{%block scripts%}
+
+{% endblock %}
