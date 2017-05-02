@@ -3,7 +3,7 @@ wget https://github.com/twbs/bootstrap/releases/download/v3.3.7/bootstrap-3.3.7-
 unzip -o -d temp bootstrap-3.3.7-dist.zip
 
 STATIC_DIR="myapp/swimlane/static/swimlane"
-
+mkdir -p $STATIC_DIR
 mv temp/bootstrap-3.3.7-dist/css $STATIC_DIR
 mv temp/bootstrap-3.3.7-dist/js $STATIC_DIR
 mv temp/bootstrap-3.3.7-dist/fonts $STATIC_DIR
