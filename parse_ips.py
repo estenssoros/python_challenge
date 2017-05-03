@@ -1,13 +1,11 @@
 # coding: utf-8
 from __future__ import division
 
-import random
 import threading
 import time
-from multiprocessing import Process, Queue, cpu_count
+from multiprocessing import Queue
 from Queue import Empty as QueueEmpty
 
-import pandas as pd
 import requests
 
 import mylogger

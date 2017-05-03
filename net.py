@@ -1,5 +1,5 @@
 import threading
-from multiprocessing import Process, Queue, cpu_count
+from multiprocessing import Process
 
 
 class Workers(object):
