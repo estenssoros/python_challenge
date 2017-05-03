@@ -78,12 +78,14 @@ class MyDB(object):
         OUTPUT: sql statement for inserting into all columns of table along with
         list of fields in table
         '''
-        sql = '''INSERT INTO {} ('''.format(table_name)
+        insert_part = '''INSERT INTO {} ('''.format(table_name)
         self.curs.execute('select * from %s limit 1' % table_name)
         self.descriptions[table_name] = self.curs.description
         cols = [x[0] for x in self.descriptions[table_name]]
-        sql = sql + ','.join(cols) + ') VALUES '
-        return sql, cols
+        insert_part = insert_part + ','.join(cols) + ') VALUES '
+        duplicate_part = 'ON DUPLICATE KEY UPDATE '
+        duplicate_part += ', '.join(['{0} = VALUES({0})'.format(x) for x in cols[1:]])
+        return (insert_part, duplicate_part), cols
 
     def query_to_string(self, table_name, queries):
         '''
@@ -116,6 +118,7 @@ class MyDB(object):
         '''
         insert multiple rows at once
         '''
+        insert_part, duplicate_part = sql
         queries = self.query_to_string(table_name, queries)
-        self.curs.execute(sql + queries)
+        self.curs.execute(insert_part + queries + duplicate_part)
         self.conn.commit()
