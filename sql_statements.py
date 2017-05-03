@@ -32,7 +32,7 @@ CREATE TABLE rdap (
 )
 '''
 
-CREATE_TF='''
+CREATE_TF = '''
 CREATE TABLE text_file (
   id SERIAL
   , file_name varchar(128) DEFAULT NULL
@@ -40,6 +40,9 @@ CREATE TABLE text_file (
   , date_uploaded timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
 '''
+MYSQL_CREATE_DB = '''
+CREATE DATABSE IF NOT EXISTS swimlane
+'''
 
-MYSQL_SUPRESS_WARN='''SET sql_notes = 1'''
+MYSQL_SUPRESS_WARN = '''SET sql_notes = 1'''
 DROP_TF = '''DROP TABLE IF EXISTS text_file'''
