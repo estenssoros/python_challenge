@@ -27,6 +27,7 @@ class Interview(object):
         self.rdap_url = 'http://rdap.arin.net/bootstrap/ip/%s'
         self.dbname = 'swimlane'
         self.timeout_limit = 10
+        self.NUMBER_OF_THREADS = 10
         self.NUMBER_OF_READERS = 3
         self.NUMBER_OF_WRITERS = 2
         self.NUMBER_OF_REPORTERS = 1
@@ -51,7 +52,6 @@ class Interview(object):
             self.query_api(url, ip_address, results, timeouts=timeouts + 1)
 
     def ip_queue_thread_handler(self, ip_queue, write_queue):
-        NUMBER_OF_THREADS = 10
         worklist = []
         while True:
             try:
@@ -62,7 +62,7 @@ class Interview(object):
                 time.sleep(1.5)
                 continue
             worklist.append(arg)
-            if len(worklist) == NUMBER_OF_THREADS:
+            if len(worklist) == self.NUMBER_OF_THREADS:
                 threads = []
                 results = []
                 for ip, url in worklist:
