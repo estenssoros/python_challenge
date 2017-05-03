@@ -22,7 +22,6 @@ class Workers(object):
             p.start()
             self.proc_list.append(p)
         self.logger.info('started {} {} processes'.format(self.num_workers, self.name))
-        return len(self.proc_list), self.name
 
     def shutdown_process(self):
         for _ in range(self.num_workers):
@@ -52,7 +51,7 @@ class Master(object):
 
     def start(self):
         for name in self.order:
-            self.logger.info('started {} {} processes'.format(*self.workers[name].start_process()))
+            self.workers[name].start_process()
 
     def shutdown(self):
         for name in self.order:
