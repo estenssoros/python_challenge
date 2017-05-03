@@ -26,32 +26,35 @@ class Interview(object):
         self.geo_url = 'http://freegeoip.net/json/%s'
         self.rdap_url = 'http://rdap.arin.net/bootstrap/ip/%s'
         self.dbname = 'swimlane'
-        self.timeout_limit = 10
+        self.TIMEOUT_LIMIT = 10
+        self.QUERY_LIMIT = 100
         self.NUMBER_OF_THREADS = 10
-        self.NUMBER_OF_READERS = 3
+        self.NUMBER_OF_READERS = 6
         self.NUMBER_OF_WRITERS = 2
         self.NUMBER_OF_REPORTERS = 1
         self.logger = mylogger.mylogger()
+        self.SLEEP_TIME = 1
 
-    def query_api(self, url, ip_address, results, timeouts=0):
+    def query_api(self, arg, results, timeouts=0):
         '''
         query either geo or rdap api
         '''
-        if timeouts == self.timeout_limit:
+        ip_address, url, route = arg
+        if timeouts == self.TIMEOUT_LIMIT:
             return None
         try:
             resp = requests.get(url % ip_address, timeout=1).json()
             resp['ip'] = ip_address
             if 'rdap' in url:
                 resp = self.my_util.parse_rdap_json(resp)
-            results.append(resp)
+            results.append((route, resp))
             self.logger.info('success: {}'.format(url) % ip_address)
         except Exception as e:
-            self.logger.debug('error: {} - retrying {}/{}...'.format(url, timeouts, self.timeout_limit) % ip_address)
+            self.logger.debug('error: {} - retrying {}/{}...'.format(url, timeouts, self.TIMEOUT_LIMIT) % ip_address)
             time.sleep(2)
-            self.query_api(url, ip_address, results, timeouts=timeouts + 1)
+            self.query_api(arg, results, timeouts=timeouts + 1)
 
-    def ip_queue_thread_handler(self, ip_queue, write_queue):
+    def ip_queue_thread_handler(self, ip_queue, router):
         worklist = []
         while True:
             try:
@@ -59,28 +62,25 @@ class Interview(object):
                 if arg == 'END':
                     break
             except QueueEmpty:
-                time.sleep(1.5)
+                time.sleep(self.SLEEP_TIME)
                 continue
             worklist.append(arg)
             if len(worklist) == self.NUMBER_OF_THREADS:
                 threads = []
                 results = []
-                for ip, url in worklist:
-                    thread = threading.Thread(target=self.query_api, args=(url, ip, results))
+                for arg in worklist:
+                    thread = threading.Thread(target=self.query_api, args=(arg, results))
                     threads.append(thread)
                     thread.start()
                 for thread in threads:
                     thread.join()
-                for resp in results:
-                    write_queue.put(resp)
+                for route, resp in results:
+                    router[route].put(resp)
                 worklist = []
 
     def db_writer(self, write_queue, reporter_queue, table_name):
-        query_limit = 100
         sql, cols = self.my_db.construct_insert_query(table_name)
-        end_count = 0
         queries = []
-
         while True:
             try:
                 item = write_queue.get_nowait()
@@ -89,11 +89,15 @@ class Interview(object):
                 else:
                     queries.append([item[x] for x in cols])
             except QueueEmpty:
-                time.sleep(1)
-
-            if len(queries) == query_limit:
+                if queries:
+                    self.my_db.multi_insert(table_name, sql, queries)
+                    reporter_queue.put(len(queries))
+                    queries = []
+                time.sleep(self.SLEEP_TIME)
+                continue
+            if len(queries) == self.QUERY_LIMIT:
                 self.my_db.multi_insert(table_name, sql, queries)
-                reporter_queue.put(query_limit)
+                reporter_queue.put(self.QUERY_LIMIT)
                 queries = []
 
         if queries:
@@ -110,7 +114,7 @@ class Interview(object):
                     break
                 count += item
             except QueueEmpty:
-                time.sleep(1)
+                time.sleep(self.SLEEP_TIME)
                 continue
             if time.time() > t1:
                 self.logger.info('progress: {0}/{1} - {2:.2f}%'.format(count, ttl, (count / ttl * 100)))
@@ -121,23 +125,23 @@ class Interview(object):
         self.my_util = MyUtil()
         self.master = Master(self.logger)
 
-        geo_ip_queue = Queue(len(ips) * 3)
-        rdap_ip_queue = Queue(len(ips) * 3)
+        ip_queue = Queue(len(ips) * 2 * 3)
         geo_write_queue = Queue(len(ips) * 3)
         rdap_write_queue = Queue(len(ips) * 3)
         reporter_queue = Queue(len(ips) * 3)
 
-        self.master.new_worker('rdap reader', self.NUMBER_OF_READERS, self.ip_queue_thread_handler, (rdap_ip_queue, rdap_write_queue))
+        router = {'rdap': rdap_write_queue, 'geo': geo_write_queue}
+
+        self.master.new_worker('readers', self.NUMBER_OF_READERS, self.ip_queue_thread_handler, (ip_queue, router))
         self.master.new_worker('rdap writer', self.NUMBER_OF_WRITERS, self.db_writer, (rdap_write_queue, reporter_queue, 'rdap'))
-        self.master.new_worker('geo reader', self.NUMBER_OF_READERS, self.ip_queue_thread_handler, (geo_ip_queue, geo_write_queue))
         self.master.new_worker('geo writer', self.NUMBER_OF_WRITERS, self.db_writer, (geo_write_queue, reporter_queue, 'geo'))
         self.master.new_worker('simple reporter', self.NUMBER_OF_REPORTERS, self.simple_reporter, (reporter_queue, len(ips) * 2))
 
         self.master.start()
 
         for ip in ips:
-            rdap_ip_queue.put((ip, self.rdap_url))
-            geo_ip_queue.put((ip, self.geo_url))
+            ip_queue.put((ip, self.rdap_url, 'rdap'))
+            ip_queue.put((ip, self.geo_url, 'geo'))
 
         self.master.shutdown()
 
@@ -146,4 +150,4 @@ if __name__ == '__main__':
     interview = Interview()
     my_util = MyUtil()
     ips = my_util.extract_ips('list_of_ips.txt')
-    interview.get_ip_data(ips[:50])
+    interview.get_ip_data(ips[:100])
