@@ -7,6 +7,7 @@ from multiprocessing import Queue
 from Queue import Empty as QueueEmpty
 
 import requests
+from tqdm import tqdm
 
 import mylogger
 from db import MyDB
@@ -103,20 +104,17 @@ class Interview(object):
             reporter_queue.put(len(queries))
 
     def simple_reporter(self, reporter_queue, ttl):
-        count = 0
-        t1 = time.time() + 15.0
+        pbar = tqdm(total=ttl)
         while True:
             try:
                 item = reporter_queue.get_nowait()
                 if item == 'END':
                     break
-                count += item
+                pbar.update(item)
             except QueueEmpty:
                 time.sleep(self.SLEEP_TIME)
                 continue
-            if time.time() > t1:
-                self.logger.info('progress: {0}/{1} - {2:.2f}%'.format(count, ttl, (count / ttl * 100)))
-                t1 == time.time() + 15.0
+        pbar.close()
 
     def get_ip_data(self, ips):
         self.my_db = MyDB(self.dbname, flavor='mysql')
