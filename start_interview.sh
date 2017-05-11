@@ -11,12 +11,7 @@ mv temp/bootstrap-3.3.7-dist/fonts $STATIC_DIR
 
 wget -O $STATIC_DIR/css/dropzone.css https://raw.githubusercontent.com/enyo/dropzone/master/dist/dropzone.css
 wget -O $STATIC_DIR/js/dropzone.js https://raw.githubusercontent.com/enyo/dropzone/master/dist/dropzone.js
-
-wget https://github.com/Leaflet/Leaflet.markercluster/archive/0.2.zip
-unzip -o -d temp 0.2.zip
-mv temp/Leaflet.markercluster-0.2/dist/MarkerCluster.Default.css $STATIC_DIR/css/
-mv temp/Leaflet.markercluster-0.2/dist/MarkerCluster.css $STATIC_DIR/css/
-mv temp/Leaflet.markercluster-0.2/dist/leaflet.markercluster-src.js $STATIC_DIR/js/
+wget -O $STATIC_DIR/js/leaflet.markercluster-src.js https://s3.amazonaws.com/sebsbucket/cdn/leaflet.markercluster-src.js
 
 rm -rf temp
 rm *.zip
