@@ -3,6 +3,7 @@ import os
 import sqlite3
 import sys
 import warnings
+import MySQLdb
 
 from dateutil import parser
 
@@ -58,8 +59,7 @@ class MyDB(object):
         curs.execute('SHOW DATABASES')
         dbs = [x[0] for x in curs.fetchall()]
         if self.dbname not in dbs:
-            print 'creating database'
-            curs.execute(sql_statements.MYSQL_CREATE_DB)
+            curs.execute(sql_statements.MYSQL_CREATE_DB % self.dbname)
         curs.execute('''use {}'''.format(self.dbname))
         curs.execute('SHOW TABLES')
         tbls = [x[0] for x in curs.fetchall()]
